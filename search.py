@@ -86,6 +86,46 @@ class SearchProblem:
         """
         util.raiseNotDefined()
 
+class Node:
+
+    def __init__(self, problem, parent=None, action=None):
+        if parent:
+            self.state = problem.getResult(parent.getState(), action)
+        else:
+            self.state = problem.getStartState()
+        self.action = action
+
+    def __repr__(self):
+        return "<Node %s>" % (self.state,)
+
+    def getState(self):
+        return self.state
+    
+    def getParent(self):
+        return self.parent
+    
+    def getAction(self):
+        return self.action
+    
+    def path(self, problem):
+        root = problem.getStartState()
+        node = self
+        actions = []
+
+        while node.getState() != root:
+            action = node.getAction()
+            actions.insert(0, action)
+            node = node.getParent()
+        return actions
+
+    def expand(self, problem):
+        """
+        A helper function to expand a given node get all the possible actions and their
+        results as a list
+        """
+        actions = problem.getActions(self.state)
+        children = [Node(problem, self, action) for action in actions]
+        return children
 
 def tinyMazeSearch(problem):
     """
@@ -104,10 +144,22 @@ def breadthFirstSearch(problem):
     You are not required to implement this, but you may find it useful for Q5.
     """
     "*** YOUR CODE HERE ***"
+    start = Node(problem)
     frontier = util.Queue()
-    
+    explored = []
 
-    util.raiseNotDefined()
+    frontier.push(start)
+    while True:
+        if frontier.isEmpty():
+            return 'failure'
+        node = frontier.pop()
+        print "On node " + str(node)
+        if problem.goalTest(node):
+            return node.path()
+        explored.append(node)
+        for child in node.expand(problem):
+            if child not in explored:
+                frontier.push(child)
 
 def nullHeuristic(state, problem=None):
     """
@@ -116,6 +168,52 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
+def depthLimitedSearch(problem, limit):
+    start = Node(problem)
+    frontier = util.Stack()
+    explored = []
+
+    frontier.push(start)
+    while True:
+        if frontier.isEmpty():
+            return 'failure'
+        node = frontier.pop()
+        print "On node " + str(node)
+        if problem.goalTest(node):
+            return node.path()
+        if limit == 0:
+            return 'cutoff'
+        explored.append(node)
+        limit = limit - 1
+        for child in node.expand(problem):
+            if child not in explored:
+                frontier.push(child)
+
+# def depthLimitedTreeSearch(problem, limit):
+
+#     def recursiveDLS(node, problem, limit):
+#         if problem.goalTest(node):
+#             return node.path()
+#         elif limit == 0:
+#             return 'cutoff'
+#         else:
+#             cutoff_occurred = False
+#             for child in node.expand(problem):
+#                 result = recursiveDLS(child, problem, limit-1)
+#                 if result == 'cutoff':
+#                     cutoff_occurred = True
+#                 elif result != 'failure':
+#                     return result
+#             if cutoff_occurred:
+#                 return 'cutoff'
+#             else:
+#                 return 'failure'
+
+#     root = Node(problem)
+#     explored = []
+#     return recursiveDLS(root, problem, limit)
+
+
 def iterativeDeepeningSearch(problem):
     """
     Perform DFS with increasingly larger depth.
@@ -123,7 +221,13 @@ def iterativeDeepeningSearch(problem):
     Begin with a depth of 1 and increment depth by 1 at every step.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    depth = 0
+    while True:
+        result = depthLimitedSearch(problem, depth)
+        depth = depth + 1
+        if result != 'cutoff':
+            return result
+        print "Calculating on depth" + str(depth)
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
