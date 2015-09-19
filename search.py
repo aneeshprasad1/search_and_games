@@ -34,6 +34,7 @@ Pacman agents (in searchAgents.py).
 import util
 import sys
 import copy
+import pdb
 
 class SearchProblem:
     """
@@ -93,6 +94,7 @@ class Node:
             self.state = problem.getResult(parent.getState(), action)
         else:
             self.state = problem.getStartState()
+        self.parent = parent
         self.action = action
 
     def __repr__(self):
@@ -108,6 +110,8 @@ class Node:
         return self.action
     
     def path(self, problem):
+
+        #pdb.set_trace()
         root = problem.getStartState()
         node = self
         actions = []
@@ -150,15 +154,16 @@ def breadthFirstSearch(problem):
 
     frontier.push(start)
     while True:
+        # pdb.set_trace()
         if frontier.isEmpty():
             return 'failure'
         node = frontier.pop()
         print "On node " + str(node)
         if problem.goalTest(node):
             return node.path()
-        explored.append(node)
+        explored.append(node.getState())
         for child in node.expand(problem):
-            if child not in explored:
+            if child.getState() not in explored:
                 frontier.push(child)
 
 def nullHeuristic(state, problem=None):
@@ -179,14 +184,14 @@ def depthLimitedSearch(problem, limit):
             return 'failure'
         node = frontier.pop()
         print "On node " + str(node)
-        if problem.goalTest(node):
-            return node.path()
+        if problem.goalTest(node.getState()):
+            return node.path(problem)
         if limit == 0:
             return 'cutoff'
-        explored.append(node)
+        explored.append(node.getState())
         limit = limit - 1
         for child in node.expand(problem):
-            if child not in explored:
+            if child.getState() not in explored:
                 frontier.push(child)
 
 # def depthLimitedTreeSearch(problem, limit):
