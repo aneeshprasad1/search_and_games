@@ -158,9 +158,9 @@ def breadthFirstSearch(problem):
         if frontier.isEmpty():
             return 'failure'
         node = frontier.pop()
-        print "On node " + str(node)
-        if problem.goalTest(node):
-            return node.path()
+        #print "On node " + str(node)
+        if problem.goalTest(node.getState()):
+            return node.path(problem)
         explored.append(node.getState())
         for child in node.expand(problem):
             if child.getState() not in explored:
@@ -183,7 +183,7 @@ def depthLimitedSearch(problem, limit):
         if frontier.isEmpty():
             return 'failure'
         node = frontier.pop()
-        print "On node " + str(node)
+        #print "On node " + str(node)
         if problem.goalTest(node.getState()):
             return node.path(problem)
         if limit == 0:
@@ -232,12 +232,30 @@ def iterativeDeepeningSearch(problem):
         depth = depth + 1
         if result != 'cutoff':
             return result
-        print "Calculating on depth" + str(depth)
+            #print "Calculating on depth" + str(depth)
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    start = Node(problem)
+    frontier = util.PriorityQueueWithFunction(lambda node: 
+                                              heuristic(node.getState(), problem))
+    explored = []
+
+    frontier.push(start)
+    while True:
+        if frontier.isEmpty():
+            return 'failure'
+        node = frontier.pop()
+        #print "On node " + str(node)
+        if problem.goalTest(node.getState()):
+            path = node.path(problem)
+            return path
+        explored.append(node.getState())
+        for child in node.expand(problem):
+            if child.getState() not in explored:
+                frontier.push(child)
 
 # Abbreviations
 bfs = breadthFirstSearch

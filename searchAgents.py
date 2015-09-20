@@ -299,6 +299,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.startState = startingGameState.getPacmanPosition(), self.corners
 
     def getStartState(self):
         """
@@ -306,14 +307,16 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.startState
 
     def goalTest(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        _, cornersLeft = state
+        isGoal = cornersLeft == ()
+        return isGoal
 
     def getActions(self, state):
         """
@@ -344,6 +347,20 @@ class CornersProblem(search.SearchProblem):
         #   hitsWall = self.walls[nextx][nexty]
 
         "*** YOUR CODE HERE ***"
+        (x, y), cornersLeft = state
+        dx, dy = Actions.directionToVector(action)
+        nextx, nexty = int(x + dx), int(y + dy)
+        if ((nextx, nexty) in cornersLeft):
+            tempList = list(cornersLeft)
+            tempList.remove((nextx, nexty))
+            cornersLeft = tuple(tempList)
+        if not self.walls[nextx][nexty]:
+            nextState = ((nextx, nexty), cornersLeft)
+            return nextState
+        else:
+            warnings.warn("Warning: checking the result of an invalid state, action pair.")
+            return state
+
 
     def getCost(self, state, action):
         """Given a state and an action, returns a cost of 1, which is
