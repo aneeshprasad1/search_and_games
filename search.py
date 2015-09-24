@@ -90,12 +90,17 @@ class SearchProblem:
 class Node:
 
     def __init__(self, problem, parent=None, action=None):
-        if parent:
-            self.state = problem.getResult(parent.getState(), action)
-        else:
-            self.state = problem.getStartState()
+
+        self.state = problem.getStartState()
+        self.pathCost = 0
+
         self.parent = parent
         self.action = action
+
+        if parent:
+            self.state = problem.getResult(parent.getState(), action)
+            self.pathCost = parent.getPathCost() + problem.getCost(parent.getState(), self.action)
+
 
     def __repr__(self):
         return "<Node %s>" % (self.state,)
@@ -108,10 +113,11 @@ class Node:
     
     def getAction(self):
         return self.action
+
+    def getPathCost(self):
+        return self.pathCost
     
     def path(self, problem):
-
-        #pdb.set_trace()
         root = problem.getStartState()
         node = self
         actions = []
@@ -188,11 +194,12 @@ def depthLimitedSearch(problem, limit):
             return node.path(problem)
         if limit == 0:
             return 'cutoff'
-        explored.append(node.getState())
-        limit = limit - 1
-        for child in node.expand(problem):
-            if child.getState() not in explored:
-                frontier.push(child)
+        if node.getState() not in explored:
+            explored.append(node.getState())
+            limit = limit - 1
+            for child in node.expand(problem):
+                if child.getState() not in explored:
+                    frontier.push(child)
 
 # def depthLimitedTreeSearch(problem, limit):
 
@@ -240,6 +247,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     start = Node(problem)
     frontier = util.PriorityQueueWithFunction(lambda node: 
+                                              node.getPathCost() + 
                                               heuristic(node.getState(), problem))
     explored = []
 
@@ -252,10 +260,11 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         if problem.goalTest(node.getState()):
             path = node.path(problem)
             return path
-        explored.append(node.getState())
-        for child in node.expand(problem):
-            if child.getState() not in explored:
-                frontier.push(child)
+        if node.getState() not in explored:
+            explored.append(node.getState())
+            for child in node.expand(problem):
+                if child.getState() not in explored:
+                    frontier.push(child)
 
 # Abbreviations
 bfs = breadthFirstSearch
