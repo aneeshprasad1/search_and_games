@@ -401,7 +401,19 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    if problem.goalTest(state):
+        return 0
+    position, cornersLeft = state
+    manhattanDistToCorner = [(corner, util.manhattanDistance(position, corner)) 
+                             for corner in cornersLeft]
+    sortedDist = sorted(manhattanDistToCorner, key=lambda tup: tup[1])
+    closestCorner = sortedDist.pop(0)
+    if sortedDist == []:
+        return closestCorner[1]
+    newCornersLeft = (corner for corner, dist in sortedDist)
+    newState = (closestCorner[0], newCornersLeft)
+    
+    return closestCorner[1] + cornersHeuristic(newState, problem)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -524,7 +536,29 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+
+    # if problem.goalTest(state):
+    #     return 0
+
+    foodList = foodGrid
+    if type(foodList) is not list:
+        if problem.goalTest(state):
+            return 0
+        foodList = foodGrid.asList()
+
+    if foodList == []:
+        pdb.set_trace()
+        return 0
+    distToFood = [(food, util.manhattanDistance(position, food)) for food in foodList]
+    sortedFood = sorted(distToFood, key=lambda tup: tup[1])
+    closestFood = sortedFood.pop()
+    if sortedFood == []:
+        return closestFood[1]    
+    newPosition = closestFood[0]
+    foodList.remove(closestFood[0])
+    newState = (newPosition, foodList)
+
+    return closestFood[1] + foodHeuristic(newState, problem)
 
 def mazeDistance(point1, point2, gameState):
     """
