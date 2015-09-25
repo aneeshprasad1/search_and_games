@@ -16,6 +16,7 @@ from util import manhattanDistance
 from game import Directions
 import random, util, sys
 import pdb
+from search import Node
 
 from game import Agent
 
@@ -102,8 +103,8 @@ class ReflexAgent(Agent):
 
         if newDistToFood == []:
             foodScore = sys.maxint
-        elif len(newDistToFood) <= 3:
-            pdb.set_trace()
+        #elif len(newDistToFood) <= 3:
+            #pdb.set_trace()
         else:
             closestFood = float(min(newDistToFood))
             foodScore = 1/closestFood
@@ -115,6 +116,9 @@ class ReflexAgent(Agent):
             ghostScore = 1/closestGhost[0]
         
         # stops when nothing near and also doesn't take into account capsules
+        # issue is that when you move and food is far away you're on a plateau
+        # so there's no way to get out unless ghost bumps you randomly in the
+        # right direction
         evalScore = foodScore - ghostScore
 
         print(foodScore)
@@ -182,7 +186,46 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        numAgents = gameState.getNumAgents()
+
+        # Showing no legal actions
+        
+        def minimax(gameState):
+            legalActions = gameState.getLegalActions(self.index)
+            vals = [(action, min_value(gameState.generateSuccessor(self.index, action), 
+                                       1, self.depth)) for action in legalActions]
+            max_val = max(vals, key=lambda tup: tup[1])
+            action = max_val[0]
+            return action
+            
+        def max_value(gameState, depth):
+            if depth == 0:
+                return self.evaluationFunction(gameState)
+            v = -sys.maxint-1
+            legalActions = gameState.getLegalActions(self.index)
+            if legalActions == []:
+                return self.evaluationFunction(gameState)
+            for action in legalActions:
+                v = max(v, min_value(gameState.generateSuccessor(self.index, action), 
+                                     1, depth))
+            return v
+        def min_value(gameState, ghost, depth):
+            if depth == 0:
+                return self.evaluationFunction(gameState)
+            v = sys.maxint
+            legalActions = gameState.getLegalActions(ghost)
+            if legalActions == []:
+                return self.evaluationFunction(gameState)
+            for action in legalActions:
+                if ghost < numAgents-1:
+                    v = min(v, min_value(gameState.generateSuccessor(ghost, action), 
+                                         ghost+1, depth))                    
+                else:
+                    v = min(v, max_value(gameState.generateSuccessor(ghost, action), 
+                                         depth-1))
+            return v
+        return minimax(gameState)
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
