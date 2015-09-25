@@ -179,9 +179,13 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
+class myStack(util.Stack):
+    def __contains__(self, item):
+        return item in self.list
+
 def depthLimitedSearch(problem, limit):
     start = Node(problem)
-    frontier = util.Stack()
+    frontier = myStack()
     explored = []
 
     frontier.push(start)
@@ -194,11 +198,11 @@ def depthLimitedSearch(problem, limit):
             return node.path(problem)
         if limit == 0:
             return 'cutoff'
-        if node.getState() not in explored:
-            explored.append(node.getState())
-            limit = limit - 1
+        explored.append(node.getState())
+        limit = limit - 1
+        if node not in explored:
             for child in node.expand(problem):
-                if child.getState() not in explored:
+                if child.getState() not in explored and child not in frontier:
                     frontier.push(child)
 
 # def depthLimitedTreeSearch(problem, limit):
@@ -225,6 +229,30 @@ def depthLimitedSearch(problem, limit):
 #     explored = []
 #     return recursiveDLS(root, problem, limit)
 
+# def depthLimitedSearch(problem, limit):
+#     start = Node(problem)
+#     frontier = util.Stack()
+#     explored = []
+#     return recursiveDLS(start, problem, limit, explored)
+
+# def recursiveDLS(node, problem, limit, explored):
+#     explored.append(node.getState())
+#     if problem.goalTest(node.getState()):
+#         return node.path(problem)
+#     elif limit == 0:
+#         return 'cutoff'
+#     else:
+#         cutoff_occurred = False
+#         for child in node.expand(problem):
+#             if child.getState() not in explored:
+#                 result = recursiveDLS(child, problem, limit-1, explored)
+#                 if result == 'cutoff':
+#                     cutoff_occurred = True
+#                 elif result != 'failure':
+#                     return result
+#         if cutoff_occurred:
+#             return 'cutoff'
+#         return 'failure'
 
 def iterativeDeepeningSearch(problem):
     """
