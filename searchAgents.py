@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -18,7 +18,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -55,6 +55,7 @@ import util
 import time
 import search
 import warnings
+import pdb
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -216,7 +217,7 @@ class PositionSearchProblem(search.SearchProblem):
             self._visitedlist.append(state)
 
         return actions
-        
+
     def getResult(self, state, action):
         """
         Given a state and an action, returns resulting state.
@@ -298,6 +299,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.startState = startingGameState.getPacmanPosition(), self.corners
 
     def getStartState(self):
         """
@@ -305,14 +307,16 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.startState
 
     def goalTest(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        _, cornersLeft = state
+        isGoal = cornersLeft == ()
+        return isGoal
 
     def getActions(self, state):
         """
@@ -331,10 +335,10 @@ class CornersProblem(search.SearchProblem):
 
     def getResult(self, state, action):
         """
-        Given a state and an action, returns resulting state 
+        Given a state and an action, returns resulting state
         """
         # Expanded count is in getActions()
-        
+
         # Add a successor state to the successor list if the action is legal
         # Here's a code snippet for figuring out whether a new position hits a wall:
         #   x,y = currentPosition
@@ -343,6 +347,20 @@ class CornersProblem(search.SearchProblem):
         #   hitsWall = self.walls[nextx][nexty]
 
         "*** YOUR CODE HERE ***"
+        (x, y), cornersLeft = state
+        dx, dy = Actions.directionToVector(action)
+        nextx, nexty = int(x + dx), int(y + dy)
+        if ((nextx, nexty) in cornersLeft):
+            tempList = list(cornersLeft)
+            tempList.remove((nextx, nexty))
+            cornersLeft = tuple(tempList)
+        if not self.walls[nextx][nexty]:
+            nextState = ((nextx, nexty), cornersLeft)
+            return nextState
+        else:
+            warnings.warn("Warning: checking the result of an invalid state, action pair.")
+            return state
+
 
     def getCost(self, state, action):
         """Given a state and an action, returns a cost of 1, which is
@@ -383,7 +401,19 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    if problem.goalTest(state):
+        return 0
+    position, cornersLeft = state
+    manhattanDistToCorner = [(corner, util.manhattanDistance(position, corner))
+                             for corner in cornersLeft]
+    sortedDist = sorted(manhattanDistToCorner, key=lambda tup: tup[1])
+    closestCorner = sortedDist.pop(0)
+    if sortedDist == []:
+        return closestCorner[1]
+    newCornersLeft = (corner for corner, dist in sortedDist)
+    newState = (closestCorner[0], newCornersLeft)
+
+    return closestCorner[1] + cornersHeuristic(newState, problem)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -445,10 +475,10 @@ class FoodSearchProblem:
         else:
             warnings.warn("Warning: checking the result of an invalid state, action pair.")
             return state
-            
+
     def getCost(self, state, action):
         """
-        Given a state and an action, returns a cost of 1, which is the incremental cost of 
+        Given a state and an action, returns a cost of 1, which is the incremental cost of
         expanding to that successor.
         """
         nextState = self.getResult(state, action)
@@ -506,7 +536,31 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+
+    # if problem.goalTest(state):
+    #     return 0
+
+    foodList = foodGrid
+    if type(foodList) is not list:
+        if problem.goalTest(state):
+            return 0
+        foodList = foodGrid.asList()
+
+    if foodList == []:
+        return 0
+    elif len(foodList) == 1:
+        return util.manhattanDistance(position, foodList[0])
+    else:
+        #pdb.set_trace()
+        #array of tuples containing (position of food, heuristic for distance to food)
+        distToFood = [(food, util.manhattanDistance(position, food)) for food in foodList]
+        closestFood = min(distToFood, key=lambda tup: tup[1])
+        furthestFood = max(distToFood, key=lambda tup: tup[1])
+        newPosition = closestFood[0]
+        foodList.remove(closestFood[0])
+        newState = (newPosition, foodList)
+        #return closestFood[1] + foodHeuristic(newState, problem)
+        return furthestFood[1]
 
 def mazeDistance(point1, point2, gameState):
     """

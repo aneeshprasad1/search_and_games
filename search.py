@@ -181,11 +181,11 @@ def recursiveDLS(node, problem, limit, explored):
                 result = recursiveDLS(child, problem, limit-1, explored)
                 if result == 'cutoff':
                     cutoff_occurred = True
-                elif result != 'failure':
+                elif result != None:
                     return result
         if cutoff_occurred:
             return 'cutoff'
-        return 'failure'
+        return None
 
 # def recursiveDLS(problem, node, limit):
 #     if limit == 0 and problem.goalTest(node.getState()):
@@ -216,7 +216,28 @@ def iterativeDeepeningSearch(problem):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    start = Node(problem)
+    frontier = util.PriorityQueueWithFunction(lambda node:
+                                              node.getPathCost() +
+                                              heuristic(node.getState(), problem))
+    explored = []
+
+    frontier.push(start)
+    while True:
+        if frontier.isEmpty():
+            return 'failure'
+        node = frontier.pop()
+        #print "On node " + str(node)
+        if problem.goalTest(node.getState()):
+            path = node.path(problem)
+            return path
+        if node.getState() not in explored:
+            explored.append(node.getState())
+            for child in node.expand(problem):
+                if child.getState() not in explored:
+                    frontier.push(child)
+
 
 # Abbreviations
 bfs = breadthFirstSearch

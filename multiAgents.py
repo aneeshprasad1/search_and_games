@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -54,15 +54,12 @@ class ReflexAgent(Agent):
     def evaluationFunction(self, currentGameState, action):
         """
         Design a better evaluation function here.
-
         The evaluation function takes in the current and proposed successor
         GameStates (pacman.py) and returns a number, where higher numbers are better.
-
         The code below extracts some useful information from the state, like the
         remaining food (newFood) and Pacman position after moving (newPos).
         newScaredTimes holds the number of moves that each ghost will remain
         scared because of Pacman having eaten a power pellet.
-
         Print out these variables to see what you're getting, then combine them
         to create a masterful evaluation function.
         """
@@ -74,7 +71,58 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        # if ghost on you, worst neg number
+        # if move takes you to 2 within ghost, pretty shitty neg number
+        # did your move bring you closer or farther from the ghost
+        # if no food left on board
+
+        # best thing is to eat piece of food
+        # moving toward the food
+        # moving away from the food
+
+        newCapsules = successorGameState.getCapsules()
+        newScore = successorGameState.getScore()
+
+        # Measure the delta in score between this state and the child
+        # Closer to ghost is bad
+        # Closer to food is good
+        # Scared timer > 0 flips closer to ghost to good
+
+        newFoodList = newFood.asList()
+        newDistToFood = [util.manhattanDistance(newPos, food) for food in newFoodList]
+
+        newGhostTuple = [(ghost.getPosition(), ghost.getDirection()) for ghost in newGhostStates]
+
+        newDistToGhost = [(util.manhattanDistance(newPos, ghostPos), ghostDir)
+                           for ghostPos, ghostDir in newGhostTuple]
+
+        if newDistToFood == []:
+            foodScore = sys.maxint
+        elif len(newDistToFood) <= 3:
+            pdb.set_trace()
+        else:
+            closestFood = float(min(newDistToFood))
+            foodScore = 1/closestFood
+
+        closestGhost = min(newDistToGhost, key=lambda tup: tup[0])
+        if closestGhost[0] < 1:
+            ghostScore = sys.maxint
+        else:
+            ghostScore = 1/closestGhost[0]
+
+        # stops when nothing near and also doesn't take into account capsules
+        evalScore = foodScore - ghostScore
+
+        print(foodScore)
+        print(ghostScore)
+        print(evalScore)
+        print(newScore)
+        #pdb.set_trace()
+        return successorGameState.getScore() + evalScore
+
+        #newGhostDir = [ghost.getDirection() for ghost in newGhostStates]
+        #avgFood = reduce(lambda x, y: x + y, newDistToFood) / len(newDistToFood)
+        #avgGhost = reduce(lambda x, y: x + y, newDistToGhost) / len(newDistToGhost)
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -158,4 +206,3 @@ def betterEvaluationFunction(currentGameState):
 
 # Abbreviation
 better = betterEvaluationFunction
-
