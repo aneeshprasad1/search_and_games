@@ -89,12 +89,17 @@ class SearchProblem:
 class Node:
 
     def __init__(self, problem, parent=None, action=None):
-        if parent:
-            self.state = problem.getResult(parent.getState(), action)
-        else:
-            self.state = problem.getStartState()
+
+        self.state = problem.getStartState()
+        self.pathCost = 0
+
         self.parent = parent
         self.action = action
+
+        if parent:
+            self.state = problem.getResult(parent.getState(), action)
+            self.pathCost = parent.getPathCost() + problem.getCost(parent.getState(), self.action)
+
 
     def __repr__(self):
         return "<Node %s>" % (self.state,)
@@ -107,6 +112,9 @@ class Node:
 
     def getAction(self):
         return self.action
+
+    def getPathCost(self):
+        return self.pathCost
 
     def path(self, problem):
         root = problem.getStartState()
@@ -145,14 +153,7 @@ def breadthFirstSearch(problem):
 
     You are not required to implement this, but you may find it useful for Q5.
     """
-    root = problem.getStartState()
-    frontier = util.Queue()
-    frontier.push(root)
-    while (!frontier.isEmpty()) {
-
-    }
-    for
-#    util.raiseNotDefined()
+    util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
     """
@@ -161,37 +162,56 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-def depthLimitedDFS(depth, problem):
-    """
-    Depth limited DFS. Ran multiple times for different depths.
-    """
+def depthLimitedSearch(problem, limit):
+    start = Node(problem)
     frontier = util.Stack()
-    while (depth > 0):
-        root = problem.getStartState() #starting node in graph
-        actions = problem.getActions(root) #edges from start state
-        resulting_states = []
-        for a in actions:
-            resulting_states.append(problem.getResult(root, a))
+    explored = []
+    return recursiveDLS(start, problem, limit, explored)
 
+def recursiveDLS(node, problem, limit, explored):
+    explored.append(node.getState())
+    if problem.goalTest(node.getState()):
+        return node.path(problem)
+    elif limit == 0:
+        return 'cutoff'
+    else:
+        cutoff_occurred = False
+        for child in node.expand(problem):
+            if child.getState() not in explored:
+                result = recursiveDLS(child, problem, limit-1, explored)
+                if result == 'cutoff':
+                    cutoff_occurred = True
+                elif result != 'failure':
+                    return result
+        if cutoff_occurred:
+            return 'cutoff'
+        return 'failure'
 
-        depth--
-
+# def recursiveDLS(problem, node, limit):
+#     if limit == 0 and problem.goalTest(node.getState()):
+#         return node.path(problem)
+#     elif limit > 0:
+#         for child in node.expand(problem):
+#             found = recursiveDLS(problem, child, limit-1)
+#             if found != None:
+#                 return found
+#     return None
 
 
 def iterativeDeepeningSearch(problem):
     """
     Perform DFS with increasingly larger depth.
-
     Begin with a depth of 1 and increment depth by 1 at every step.
     """
     "*** YOUR CODE HERE ***"
-    from game import Directions
-    s = Directions.SOUTH
-    w = Directions.WEST
+    depth = 0
+    while True:
+        result = depthLimitedSearch(problem, depth)
+        depth = depth + 1
+        if result != 'cutoff':
+            return result
+            #print "Calculating on depth" + str(depth)
 
-
-
-    util.raiseNotDefined()
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
