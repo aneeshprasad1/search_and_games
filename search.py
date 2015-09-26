@@ -93,6 +93,7 @@ class Node:
 
         self.state = problem.getStartState()
         self.pathCost = 0
+        self.depth = 0
 
         self.parent = parent
         self.action = action
@@ -100,6 +101,7 @@ class Node:
         if parent:
             self.state = problem.getResult(parent.getState(), action)
             self.pathCost = parent.getPathCost() + problem.getCost(parent.getState(), self.action)
+            self.depth = parent.getDepth() + 1
 
 
     def __repr__(self):
@@ -116,6 +118,9 @@ class Node:
 
     def getPathCost(self):
         return self.pathCost
+    
+    def getDepth(self):
+        return self.depth
     
     def path(self, problem):
         root = problem.getStartState()
@@ -179,31 +184,27 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-class myStack(util.Stack):
-    def __contains__(self, item):
-        return item in self.list
+# def depthLimitedSearch(problem, limit):
+#     start = Node(problem)
+#     frontier = myStack()
+#     explored = []
 
-def depthLimitedSearch(problem, limit):
-    start = Node(problem)
-    frontier = myStack()
-    explored = []
-
-    frontier.push(start)
-    while True:
-        if frontier.isEmpty():
-            return 'failure'
-        node = frontier.pop()
-        #print "On node " + str(node)
-        if problem.goalTest(node.getState()):
-            return node.path(problem)
-        if limit == 0:
-            return 'cutoff'
-        explored.append(node.getState())
-        limit = limit - 1
-        if node not in explored:
-            for child in node.expand(problem):
-                if child.getState() not in explored and child not in frontier:
-                    frontier.push(child)
+#     frontier.push(start)
+#     while True:
+#         if frontier.isEmpty():
+#             return 'failure'
+#         node = frontier.pop()
+#         #print "On node " + str(node)
+#         if problem.goalTest(node.getState()):
+#             return node.path(problem)
+#         if limit == 0:
+#             return 'cutoff'
+#         explored.append(node.getState())
+#         limit = limit - 1
+#         if node not in explored and node not in frontier:
+#             for child in node.expand(problem):
+#                 if child.getState() not in explored and child not in frontier:
+#                     frontier.push(child)
 
 # def depthLimitedTreeSearch(problem, limit):
 
@@ -254,6 +255,25 @@ def depthLimitedSearch(problem, limit):
 #             return 'cutoff'
 #         return 'failure'
 
+class myStack(util.Stack):
+    def __contains__(self, item):
+        frontierStates = [node.getState() for node in self.list]
+        return item.getState() in frontierStates
+    def asList(self):
+        return self.list
+
+def graphSearch(problem, frontier):
+    explored = {}
+    frontier.append(Node(problem))
+    while frontier:
+        node = frontier.pop()
+        if problem.goalTest(node.getState()):
+            return node.path(problem)
+        if node.getState() not in explored:
+            explored.append(node.getState())
+            for child in node.expand():
+                frontier.push(child)
+
 def iterativeDeepeningSearch(problem):
     """
     Perform DFS with increasingly larger depth.
@@ -261,6 +281,28 @@ def iterativeDeepeningSearch(problem):
     Begin with a depth of 1 and increment depth by 1 at every step.
     """
     "*** YOUR CODE HERE ***"
+
+    def depthLimitedSearch(problem, limit):
+        frontier = myStack()
+        explored = []
+        frontier.push(Node(problem))
+        while frontier:
+            node = frontier.pop()
+            if problem.goalTest(node.getState()):
+                return node.path(problem)
+            if limit > node.getDepth():
+                return 'cutoff'
+            if node.getState() not in explored:
+                explored.append(node.getState())
+                for child in node.expand(problem):
+                    #pdb.set_trace()
+                    if child not in frontier:
+                        if problem.goalTest(child.getState()):
+                            return child.path(problem)
+                        frontier.push(child)
+
+        return 'failure'
+
     depth = 0
     while True:
         result = depthLimitedSearch(problem, depth)
