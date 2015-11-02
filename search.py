@@ -107,6 +107,9 @@ class Node:
     def __repr__(self):
         return "<Node %s>" % (self.state,)
 
+    def __eq__(self, other):
+        return self.state == other.state
+
     def getState(self):
         return self.state
     
@@ -142,6 +145,16 @@ class Node:
         children = [Node(problem, self, action) for action in actions]
         return children
 
+class myQueue(util.Queue):
+
+    def __contains__(self, item):
+        return item in self.list
+
+class myStack(util.Stack):
+    def __contains__(self, item):
+        return item in self.list
+
+
 def tinyMazeSearch(problem):
     """
     Returns a sequence of moves that solves tinyMaze.  For any other maze, the
@@ -159,120 +172,20 @@ def breadthFirstSearch(problem):
     You are not required to implement this, but you may find it useful for Q5.
     """
     "*** YOUR CODE HERE ***"
-    start = Node(problem)
-    frontier = util.Queue()
+    frontier = myQueue()
     explored = []
+    start = Node(problem)
 
-    frontier.push(start)
-    while True:
-        # pdb.set_trace()
-        if frontier.isEmpty():
-            return 'failure'
+    frontier.push(start)   
+    while not frontier.isEmpty():
         node = frontier.pop()
-        #print "On node " + str(node)
-        if problem.goalTest(node.getState()):
-            return node.path(problem)
-        explored.append(node.getState())
+        explored.append(node)
         for child in node.expand(problem):
-            if child.getState() not in explored:
+            if child not in explored and child not in frontier:
+                if problem.goalTest(child.getState()):
+                    return child.path(problem)
                 frontier.push(child)
-
-def nullHeuristic(state, problem=None):
-    """
-    A heuristic function estimates the cost from the current state to the nearest
-    goal in the provided SearchProblem.  This heuristic is trivial.
-    """
-    return 0
-
-# def depthLimitedSearch(problem, limit):
-#     start = Node(problem)
-#     frontier = myStack()
-#     explored = []
-
-#     frontier.push(start)
-#     while True:
-#         if frontier.isEmpty():
-#             return 'failure'
-#         node = frontier.pop()
-#         #print "On node " + str(node)
-#         if problem.goalTest(node.getState()):
-#             return node.path(problem)
-#         if limit == 0:
-#             return 'cutoff'
-#         explored.append(node.getState())
-#         limit = limit - 1
-#         if node not in explored and node not in frontier:
-#             for child in node.expand(problem):
-#                 if child.getState() not in explored and child not in frontier:
-#                     frontier.push(child)
-
-# def depthLimitedTreeSearch(problem, limit):
-
-#     def recursiveDLS(node, problem, limit):
-#         if problem.goalTest(node):
-#             return node.path()
-#         elif limit == 0:
-#             return 'cutoff'
-#         else:
-#             cutoff_occurred = False
-#             for child in node.expand(problem):
-#                 result = recursiveDLS(child, problem, limit-1)
-#                 if result == 'cutoff':
-#                     cutoff_occurred = True
-#                 elif result != 'failure':
-#                     return result
-#             if cutoff_occurred:
-#                 return 'cutoff'
-#             else:
-#                 return 'failure'
-
-#     root = Node(problem)
-#     explored = []
-#     return recursiveDLS(root, problem, limit)
-
-# def depthLimitedSearch(problem, limit):
-#     start = Node(problem)
-#     frontier = util.Stack()
-#     explored = []
-#     return recursiveDLS(start, problem, limit, explored)
-
-# def recursiveDLS(node, problem, limit, explored):
-#     explored.append(node.getState())
-#     if problem.goalTest(node.getState()):
-#         return node.path(problem)
-#     elif limit == 0:
-#         return 'cutoff'
-#     else:
-#         cutoff_occurred = False
-#         for child in node.expand(problem):
-#             if child.getState() not in explored:
-#                 result = recursiveDLS(child, problem, limit-1, explored)
-#                 if result == 'cutoff':
-#                     cutoff_occurred = True
-#                 elif result != 'failure':
-#                     return result
-#         if cutoff_occurred:
-#             return 'cutoff'
-#         return 'failure'
-
-class myStack(util.Stack):
-    def __contains__(self, item):
-        frontierStates = [node.getState() for node in self.list]
-        return item.getState() in frontierStates
-    def asList(self):
-        return self.list
-
-def graphSearch(problem, frontier):
-    explored = {}
-    frontier.append(Node(problem))
-    while frontier:
-        node = frontier.pop()
-        if problem.goalTest(node.getState()):
-            return node.path(problem)
-        if node.getState() not in explored:
-            explored.append(node.getState())
-            for child in node.expand():
-                frontier.push(child)
+    return 'failure'
 
 def iterativeDeepeningSearch(problem):
     """
@@ -285,31 +198,37 @@ def iterativeDeepeningSearch(problem):
     def depthLimitedSearch(problem, limit):
         frontier = myStack()
         explored = []
-        frontier.push(Node(problem))
-        while frontier:
+        start = Node(problem)
+
+        frontier.push(start)
+        while not frontier.isEmpty():
             node = frontier.pop()
-            if problem.goalTest(node.getState()):
-                return node.path(problem)
-            if limit > node.getDepth():
-                return 'cutoff'
-            if node.getState() not in explored:
-                explored.append(node.getState())
-                for child in node.expand(problem):
-                    #pdb.set_trace()
-                    if child not in frontier:
-                        if problem.goalTest(child.getState()):
-                            return child.path(problem)
+            explored.append(node)
+            #pdb.set_trace()
+            #if node.getDepth() == limit:
+            #return 'cutoff'
+            for child in node.expand(problem):
+                if child not in explored and child not in frontier:
+                    if problem.goalTest(child.getState()):
+                        return child.path(problem)
+                    if child.getDepth() < limit:
                         frontier.push(child)
+        return 'cutoff'
 
-        return 'failure'
-
-    depth = 0
+    depth = 1
     while True:
         result = depthLimitedSearch(problem, depth)
         depth = depth + 1
         if result != 'cutoff':
             return result
             #print "Calculating on depth" + str(depth)
+
+def nullHeuristic(state, problem=None):
+    """
+    A heuristic function estimates the cost from the current state to the nearest
+    goal in the provided SearchProblem.  This heuristic is trivial.
+    """
+    return 0
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""

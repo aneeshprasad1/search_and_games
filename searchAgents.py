@@ -56,6 +56,7 @@ import time
 import search
 import warnings
 import pdb
+import sys
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -536,30 +537,44 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    foodList = foodGrid
-    if type(foodList) is not list:
-        if problem.goalTest(state):
-            return 0
-        foodList = foodGrid.asList()
 
+    foodList = foodGrid.asList()
+    gameState = problem.startingGameState
     if foodList == []:
         return 0
-    elif len(foodList) == 1:
-        return util.manhattanDistance(position, foodList[0])
-    else:
-        #pdb.set_trace()
-        #array of tuples containing (position of food, heuristic for distance to food)
-        distToFood = [(food, util.manhattanDistance(position, food)) for food in foodList]
-        # closestFood = min(distToFood, key=lambda tup: tup[1])        
-        # newPosition = closestFood[0]
-        # foodList.remove(closestFood[0])
-        # newState = (newPosition, foodList)
-        # #return closestFood[1] + foodHeuristic(newState, problem)
+    distToFood = [mazeDistance(position, food, gameState) for food in foodList]
 
-        furthestFood = max(distToFood, key=lambda tup: tup[1])
-        return furthestFood[1]
+    furthestFood = max(distToFood)
+    return furthestFood
 
-        # return sum([tup[1] for tup in distToFood]) -1
+    # for food in foodList:
+    #     currFoodDist = mazeDistance(position, food, gameState)
+    #     furthestFoodDist = max(furthestFoodDist, currFoodDist)
+    
+    # foodList = foodGrid
+    # if type(foodList) is not list:
+    #     if problem.goalTest(state):
+    #         return 0
+    #     foodList = foodGrid.asList()
+
+    # if foodList == []:
+    #     return 0
+    # elif len(foodList) == 1:
+    #     return util.mazeDistance(position, foodList[0])
+    # else:
+    #     #pdb.set_trace()
+    #     #array of tuples containing (position of food, heuristic for distance to food)
+    #     distToFood = [(food, mazeDistance(position, food, )) for food in foodList]
+    #     # closestFood = min(distToFood, key=lambda tup: tup[1])        
+    #     # newPosition = closestFood[0]
+    #     # foodList.remove(closestFood[0])
+    #     # newState = (newPosition, foodList)
+    #     # #return closestFood[1] + foodHeuristic(newState, problem)
+
+    #     furthestFood = max(distToFood, key=lambda tup: tup[1])
+    #     return furthestFood[1]
+
+    #     # return sum([tup[1] for tup in distToFood]) -1
 
 def mazeDistance(point1, point2, gameState):
     """
